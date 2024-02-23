@@ -1,8 +1,8 @@
-from EnergyDisaggregation.energydisaggregation.models.base import Base
+from energydisaggregation.models.base import Base
 import pandas as pd
 import numpy as np
 
-from EnergyDisaggregation.energydisaggregation.feature_engineering.calendar import (
+from energydisaggregation.feature_engineering.calendar import (
     get_zone,
     get_holiday_for_zone,
 )
