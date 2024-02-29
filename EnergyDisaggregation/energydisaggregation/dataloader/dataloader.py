@@ -23,7 +23,7 @@ class Dataloader:
         data = data.resample(frequency).agg(resampling_mode)
         data = data.stack(level=config["Region"])
         return data
-
+    
     @classmethod
     def load_power(cls, path: str, frequency: str = "h", resampling_mode: str = "sum"):
         df = pd.read_csv(path, sep=";")
