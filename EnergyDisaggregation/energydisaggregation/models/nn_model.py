@@ -48,10 +48,10 @@ def split_year(df, test_year):
     test = df[(pd.to_datetime(df.index).year == test_year)]
     train = df[(pd.to_datetime(df.index).year != test_year)]
     print(len(test), len(train))
-    X_train_year = train.drop(["consommation brute électricité (mw) - rte"], axis=1)
-    y_train_year = train["consommation brute électricité (mw) - rte"]
-    X_test_year = test.drop(["consommation brute électricité (mw) - rte"], axis=1)
-    y_test_year = test["consommation brute électricité (mw) - rte"]
+    X_train_year = train.drop(["consommation brute totale (mw)"], axis=1)
+    y_train_year = train["consommation brute totale (mw)"]
+    X_test_year = test.drop(["consommation brute totale (mw)"], axis=1)
+    y_test_year = test["consommation brute totale (mw)"]
     return X_train_year, X_test_year, y_train_year, y_test_year
 
 
@@ -75,7 +75,7 @@ class FeaturesDataset(Dataset):
         temperature_features = self.df.iloc[
             idx, self.df.columns.isin(self.temp)
         ].tolist()
-        target = self.df.iloc[idx]["consommation brute électricité (mw) - rte"]
+        target = self.df.iloc[idx]["consommation brute totale (mw)"]
 
         sample = {
             "temp": torch.tensor(temperature_features),
