@@ -1,7 +1,7 @@
 CONFIG_POWER = {
     "Date": "Date - Heure",
     "Region": "Région",
-    "Power": "Consommation brute électricité (MW) - RTE",
+    "Power" : "Consommation brute totale (MW)",
     "Status": "Statut - RTE",
 }
 
@@ -20,3 +20,4 @@ dict_diff = {
 
 DATACONFIG = {x: CONFIG_POWER[x] for x in CONFIG_POWER.keys() if x != "Status"}
 DATACONFIG.update(dict_diff)
+
