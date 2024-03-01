@@ -1,7 +1,7 @@
 CONFIG_POWER = {
     "Date": "Date - Heure",
     "Region": "Région",
-    "Power" : "Consommation brute totale (MW)",
+    "Power" : "Consommation brute électricité (MW) - RTE",
     "Status": "Statut - RTE",
 }
 
