@@ -26,7 +26,7 @@ def get_calendar_features(df_tot):
     df_out = df_out.drop(columns=["date", "zone"])
     df_out = df_out.drop(
         columns=[
-            "consommation brute totale (mw)",
+            "Consommation brute électricité (MW) - RTE",
             "Température (°C)",
             "Nebulosité totale",
             "Vitesse du vent moyen 10 mn",
