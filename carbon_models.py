@@ -5,6 +5,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.optimizers import Adam
+from keras.layers import Reshape
 from catboost import CatBoostRegressor
 from xgboost import XGBRegressor
 
@@ -74,14 +75,11 @@ def LSTM_predict(df, train_start, train_end, test_end, selected_vars=None):
 
     X_train, X_test, y_train, y_test, std, mean = encode_normalize(df, train_start, train_end, test_end, selected_vars)
 
-    # Reshape features for LSTM input [samples, timesteps, features]
-    X_train = np.reshape(X_train.values, (X_train.shape[0], 1, X_train.shape[1]))
-    X_test = np.reshape(X_test.values, (X_test.shape[0], 1, X_test.shape[1]))
-
     # Define the LSTM model
     model = Sequential(
         [
-            LSTM(64, input_shape=(X_train.shape[1], X_train.shape[2]), return_sequences=True),
+            Reshape((1, X_train.shape[1]), input_shape=(X_train.shape[1],)), # Reshape features for LSTM input [samples, timesteps, features]
+            LSTM(64, input_shape=(1, X_train.shape[1]), return_sequences=True),
             Dropout(0.2),
             LSTM(32),
             Dropout(0.2),
@@ -120,7 +118,7 @@ def LSTM_predict(df, train_start, train_end, test_end, selected_vars=None):
     output_df['y'] = output_df['y']*std + mean
     output_df['y_pred'] = output_df['y_pred']*std + mean
 
-    return output_df
+    return output_df, model
 
 
 def Catboost_predict(df, train_start, train_end, test_end, selected_vars=None):
@@ -152,7 +150,7 @@ def Catboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     output_df['y'] = output_df['y']*std + mean
     output_df['y_pred'] = output_df['y_pred']*std + mean
 
-    return output_df
+    return output_df, model
 
 
 def Xgboost_predict(df, train_start, train_end, test_end, selected_vars=None):
@@ -175,4 +173,4 @@ def Xgboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     output_df['y'] = output_df['y']*std + mean
     output_df['y_pred'] = output_df['y_pred']*std + mean
 
-    return output_df
+    return output_df, model
