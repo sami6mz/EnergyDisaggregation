@@ -67,12 +67,12 @@ def encode_normalize(df, train_start, train_end, test_end, selected_vars=None):
     X_train, X_test = X[is_train], X[is_test]
     y_train, y_test = y[is_train], y[is_test]
 
-    return X_train, X_test, y_train, y_test
+    return X_train, X_test, y_train, y_test, scaler.scale_[-1], scaler.mean_[-1]
 
 
 def LSTM_predict(df, train_start, train_end, test_end, selected_vars=None):
 
-    X_train, X_test, y_train, y_test = encode_normalize(df, train_start, train_end, test_end, selected_vars)
+    X_train, X_test, y_train, y_test, std, mean = encode_normalize(df, train_start, train_end, test_end, selected_vars)
 
     # Reshape features for LSTM input [samples, timesteps, features]
     X_train = np.reshape(X_train.values, (X_train.shape[0], 1, X_train.shape[1]))
@@ -116,12 +116,16 @@ def LSTM_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
 
+    # inverse scaling
+    output_df['y'] = output_df['y']*std + mean
+    output_df['y_pred'] = output_df['y_pred']*std + mean
+
     return output_df
 
 
 def Catboost_predict(df, train_start, train_end, test_end, selected_vars=None):
 
-    X_train, X_test, y_train, y_test = encode_normalize(df, train_start, train_end, test_end, selected_vars)
+    X_train, X_test, y_train, y_test, std, mean = encode_normalize(df, train_start, train_end, test_end, selected_vars)
 
     # Define CatBoost model
     model = CatBoostRegressor(
@@ -144,12 +148,16 @@ def Catboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
 
+    # inverse scaling
+    output_df['y'] = output_df['y']*std + mean
+    output_df['y_pred'] = output_df['y_pred']*std + mean
+
     return output_df
 
 
 def Xgboost_predict(df, train_start, train_end, test_end, selected_vars=None):
 
-    X_train, X_test, y_train, y_test = encode_normalize(df, train_start, train_end, test_end, selected_vars)
+    X_train, X_test, y_train, y_test, std, mean = encode_normalize(df, train_start, train_end, test_end, selected_vars)
 
     # Train Xgboost model
     model = XGBRegressor(objective="reg:squarederror", random_state=42)
@@ -162,5 +170,9 @@ def Xgboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_frame = pd.DataFrame({"y" : np.concatenate((np.array(y_train).ravel(),np.array(y_test).ravel()))})
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
+
+    # inverse scaling
+    output_df['y'] = output_df['y']*std + mean
+    output_df['y_pred'] = output_df['y_pred']*std + mean
 
     return output_df
