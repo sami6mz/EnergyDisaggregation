@@ -92,7 +92,7 @@ with col23:
     test_end = st.date_input("Fin de la prévision", datetime.date(2019, 12, 31), max_value = datetime.date(2019, 12, 31))
 
 
-df = pd.read_csv("carbon_data.csv", sep = ',')
+df = pd.read_csv("../Data/carbon_data.csv", sep = ',')
 
 # Modèle à utiliser
 modele = st.selectbox(
@@ -156,7 +156,7 @@ else :
 if region!='Toute la France':
     region_data = output_df[output_df['Region'] == region]
     fig2 = px.line(region_data, x = 'Date', y=['y', 'y_pred'],
-              title="Emission de CO2 à l'échelle régionale",
+              title=f"Emission de CO2 à l'échelle de {region}",
               labels={'Date': 'Date', 'value': 'Emissions (MtCO2/jour)'})
     
 else :
@@ -227,7 +227,101 @@ st.pyplot(fig)
 ############ Partie simulation ############
 st.header("Simulation avec augmentation de la température")
 # Augmentation de la température
-temp_incr = st.slider("Simulation d'augmentation de la température", min_value = 0.0, max_value = 5.0, value = 0.0)
-st.write("On compare les courbes d'émission désagréggées avec et sans augmentation de la température")
-st.write("Variation des émissions de CO2 sur 1 an")
-st.write("Variation des émissions de CO2 (thermosensible) sur 1 an")
+
+st.write("On ajoute du bruit sur les températures relevées, tel que :")
+st.latex(r'''
+\begin{equation*}
+        T_{simulated, t} := T_{recorded, t} + \epsilon_{t} \hspace{8mm} \forall t \in \left[t_{0},t_{f}\right]
+\end{equation*}
+''')
+
+st.write("where")
+
+st.latex(r'''
+\begin{equation*}
+        \epsilon_{t} \sim \mathcal{N}\left(\frac{T_{inc} \times(t - t_{0})}{t_{f} - t_{0}},\sigma \right)
+\end{equation*}
+''')
+
+
+col41, col42 = st.columns(2)
+with col41 :
+    sigma = st.slider("Ecart-type", min_value = 0.0, max_value = 5.0, value = 1.0)
+with col42 :
+    temp_incr = st.slider("Augmentation de la température (en °C)", min_value = 0.0, max_value = 5.0, value = 0.5)
+
+
+train_start = str(train_start)
+train_end = str(train_end)
+test_end = str(test_end)
+
+def simulate_temperature_recorded(t_recorded, t_inc, t0, tf, sigma=1):
+    time_range = np.arange(t0, tf+1)
+    epsilon = np.random.normal(loc=(t_inc * (time_range - t0) / (tf - t0)), scale=sigma)
+    T_simulated = t_recorded + epsilon
+    return time_range, T_simulated
+
+# Define parameters
+t_recorded = np.array(df['Temp'][is_test])  # Recorded temperature
+t_inc = temp_incr        # Increase in temperature
+t0 = 0           # Initial time
+tf = len(t_recorded)-1          # Final time
+sigma = 1        # Standard deviation for the normal distribution
+
+# Simulate temperature
+time_range, T_simulated = simulate_temperature_recorded(t_recorded, t_inc, t0, tf, sigma)
+
+time_range = df['Date'][is_test]
+region_range = df['Region'][is_test]
+
+temp_df = pd.DataFrame({'Date' : time_range, 'Region' : region_range, 'Recorded Temperature' : t_recorded, 'Simulated Temperature Rise' : T_simulated})
+
+
+# Plot the difference in temperature
+if region != 'Toute la France':
+    # Plot for the region
+    region_data3 = temp_df[temp_df['Region'] == region]
+    fig3 = px.line(region_data3, x = 'Date', y=['Recorded Temperature', 'Simulated Temperature Rise'],
+              title=f"Température à l'échelle de {region}",
+              labels={'Date': 'Date', 'value': 'Température (°C)'})
+else:
+    # Plot for the whole country
+    aggregated_data3 = temp_df.groupby(['Date']).apply(pd.DataFrame.mean,skipna=False, numeric_only=True).reset_index()
+    fig3 = px.line(aggregated_data3, x = 'Date', y=['Recorded Temperature', 'Simulated Temperature Rise'],
+              title="Température à l'échelle de la France",
+              labels={'Date': 'Date', 'value': 'Température (°C)'})
+
+st.plotly_chart(fig3)
+
+df2 = df.copy()
+df2['Temp'][is_test] = T_simulated
+
+# Model with the new temperature
+if modele == 'LSTM':
+    output_df2, model2 = LSTM_predict(df2, train_start, train_end, test_end, selected_vars=features)
+elif modele == 'CatBoost' :
+    output_df2, model2 = Catboost_predict(df2, train_start, train_end, test_end, selected_vars=features)
+else : 
+    output_df2, model2 = Xgboost_predict(df2, train_start, train_end, test_end, selected_vars=features)
+
+
+emis_predicted = output_df['y_pred'][is_test]
+emis_simulated = output_df2['y_pred'][is_test]
+emis_temp_df = pd.DataFrame({'Date' : time_range, 'Region' : region_range, 'Predicted emission' : emis_predicted, 'Predicted emission with temperature rise' : emis_simulated})
+
+if region!='Toute la France':
+    region_data4 = emis_temp_df[emis_temp_df['Region'] == region]
+    var_emis = np.mean(region_data4['Predicted emission with temperature rise'] - region_data4['Predicted emission'])
+    fig4 = px.line(region_data4, x = 'Date', y=['Predicted emission', 'Predicted emission with temperature rise'],
+              title=f"Emission de CO2 à l'échelle de {region}",
+              labels={'Date': 'Date', 'value': 'Emissions (MtCO2/jour)'})
+else :
+    aggregated_data4 = emis_temp_df.groupby(['Date']).apply(pd.DataFrame.sum,skipna=False).drop(columns=['Date','Region']).reset_index()
+    var_emis = np.mean(aggregated_data4['Predicted emission with temperature rise'] - aggregated_data4['Predicted emission'])
+    fig4 = px.line(aggregated_data4, x = 'Date', y=['Predicted emission', 'Predicted emission with temperature rise'],
+              title="Emission de CO2 à l'échelle de la France",
+              labels={'Date': 'Date', 'value': 'Emissions (MtCO2/jour)'})
+
+st.plotly_chart(fig4)
+
+st.write("Différence moyenne d'émission = ", var_emis)
