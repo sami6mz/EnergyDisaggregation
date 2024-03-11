@@ -35,8 +35,8 @@ with col12:
     end_year = st.number_input("Année de fin", value=2022, placeholder="2023", min_value=begin_year, max_value=2023)
 
 # Afficher la courbe de consommation d'énergie désagrégée de begin_year à end_year
-courbe_desag = "../Data/ctr_regions_2019.csv"
-conso_reelle = "EnergyDisaggregation/energydisaggregation/data_storage/df_process.csv"
+courbe_desag = "../Data/ctr_regions_2022.csv"
+conso_reelle = "../Data/df_process_2022.csv"
 
 courbe_d = pd.read_csv(courbe_desag, sep=",")
 conso_r = pd.read_csv(conso_reelle, sep=",")
@@ -54,12 +54,12 @@ if region!='Toute la France' :
     conso_r_filtered = conso_r_filter[conso_r_filter['Région'] == region].reset_index(drop = True)  
 else :
     courbe_d_filtered = courbe_d_filter.groupby('Date - Heure').agg({'c': 'sum', 't': 'sum', 'r': 'sum'}).reset_index()
-    conso_r_filtered = conso_r_filter.groupby('Date - Heure').agg({'consommation brute électricité (mw) - rte':'sum'}).reset_index()
+    conso_r_filtered = conso_r_filter.groupby('Date - Heure').agg({'consommation brute totale (mw) ':'sum'}).reset_index()
     
-courbe_d_filtered['thermosensible'] = conso_r_filtered['consommation brute électricité (mw) - rte'] * courbe_d_filtered['t'] / (courbe_d_filtered['t'] + courbe_d_filtered['r'])
+courbe_d_filtered['thermosensible'] = conso_r_filtered['consommation brute totale (mw) '] * courbe_d_filtered['t'] / (courbe_d_filtered['t'] + courbe_d_filtered['r'])
 
 
-fig = px.line(conso_r_filtered, x='Date - Heure', y=['consommation brute électricité (mw) - rte'],
+fig = px.line(conso_r_filtered, x='Date - Heure', y=['consommation brute totale (mw) '],
               title='Courbe de charge en MW',
               labels={'Date - Heure': 'Date', 'value': 'Consommation (MW)'})
 fig.update_traces(name='conso totale')
@@ -85,14 +85,14 @@ with col21:
 
 # Fin de l'entraînement
 with col22:
-    train_end = st.date_input("Fin de l'entraînement", datetime.date(2019, 10, 1),min_value = train_start, max_value = datetime.date(2019, 12, 31))
+    train_end = st.date_input("Fin de l'entraînement", datetime.date(2019, 10, 1),min_value = train_start, max_value = datetime.date(2023, 12, 31))
 
 # Fin de la prévision
 with col23:
-    test_end = st.date_input("Fin de la prévision", datetime.date(2019, 12, 31), max_value = datetime.date(2019, 12, 31))
+    test_end = st.date_input("Fin de la prévision", datetime.date(2019, 12, 31), max_value = datetime.date(2023, 12, 31))
 
 
-df = pd.read_csv("../Data/carbon_data.csv", sep = ',')
+df = pd.read_csv("../Data/carbon_data_2022.csv", sep = ',')
 
 # Modèle à utiliser
 modele = st.selectbox(
@@ -101,7 +101,7 @@ modele = st.selectbox(
 )
 
 labels = ["Température", "Saisons", "Jours de la semaine", "Vacances", "Jours fériés",
-          "Consommation électrique", "Conso thermosensible", "Conso régulière", "Lags"]
+          "Consommation gaz et électricité", "Conso thermosensible", "Conso régulière", "Lags"]
 
 L = len(labels)
 
@@ -111,11 +111,11 @@ my_dict["Jours de la semaine"] = ['week_day']
 my_dict["Vacances"] = ['is_holiday']
 my_dict["Jours fériés"] = ['is_bank_holiday']
 my_dict["Température"] = ['Temp']
-my_dict["Consommation électrique"] = ['ce']
-my_dict["Conso régulière"] = ['re']
-my_dict["Conso thermosensible"] = ['te']
+my_dict["Consommation gaz et électricité"] = ['c']
+my_dict["Conso régulière"] = ['r']
+my_dict["Conso thermosensible"] = ['t']
 my_dict["Lags"] = ['Temp1', 'Temp2', 'Temp3', 'Temp4', 'Temp5', 'Temp6', 'Temp7',
-                   'ce1', 'ce2', 'ce3', 'ce4', 'ce5', 'ce6', 'ce7']
+                   'c1', 'c2', 'c3', 'c4', 'c5', 'c6', 'c7']
 
 # Features à conserver
 st.write("Choix des données d'entrée du modèle")
