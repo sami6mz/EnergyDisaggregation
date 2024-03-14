@@ -110,7 +110,7 @@ def LSTM_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_pred = model.predict(X_test).ravel()
 
     # Compute final dataframe
-    y_frame = pd.DataFrame({"y" : np.concatenate((np.array(y_train).ravel(),np.array(y_test).ravel()))})
+    y_frame = pd.concat([y_test,y_train]).rename(columns={'Emissions' : 'y'})
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
 
@@ -142,7 +142,7 @@ def Catboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_pred = model.predict(X_test)
 
     # Compute final dataframe
-    y_frame = pd.DataFrame({"y" : np.concatenate((np.array(y_train).ravel(),np.array(y_test).ravel()))})
+    y_frame = pd.concat([y_test,y_train]).rename(columns={'Emissions' : 'y'})
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
 
@@ -165,7 +165,7 @@ def Xgboost_predict(df, train_start, train_end, test_end, selected_vars=None):
     y_pred = model.predict(X_test)
 
     # Compute final dataframe
-    y_frame = pd.DataFrame({"y" : np.concatenate((np.array(y_train).ravel(),np.array(y_test).ravel()))})
+    y_frame = pd.concat([y_test,y_train]).rename(columns={'Emissions' : 'y'})
     y_pred_frame = pd.DataFrame({"y_pred" : y_pred}).set_index(pd.DataFrame(y_test).index)
     output_df = df[['Date','Region']].join(pd.concat((y_frame,y_pred_frame),axis=1))
 
