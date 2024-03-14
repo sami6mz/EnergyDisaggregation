@@ -101,7 +101,7 @@ modele = st.selectbox(
 )
 
 labels = ["Température", "Saisons", "Jours de la semaine", "Vacances", "Jours fériés",
-          "Consommation gaz et électricité", "Conso thermosensible", "Conso régulière", "Lags"]
+          "Consommation totale", "Conso thermosensible", "Conso régulière", "Lags"]
 
 L = len(labels)
 
@@ -111,7 +111,7 @@ my_dict["Jours de la semaine"] = ['week_day']
 my_dict["Vacances"] = ['is_holiday']
 my_dict["Jours fériés"] = ['is_bank_holiday']
 my_dict["Température"] = ['Temp']
-my_dict["Consommation gaz et électricité"] = ['c']
+my_dict["Consommation totale"] = ['c']
 my_dict["Conso régulière"] = ['r']
 my_dict["Conso thermosensible"] = ['t']
 my_dict["Lags"] = ['Temp1', 'Temp2', 'Temp3', 'Temp4', 'Temp5', 'Temp6', 'Temp7',
