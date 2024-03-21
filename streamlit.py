@@ -35,7 +35,7 @@ with col12:
     end_year = st.number_input("Année de fin", value=2022, placeholder="2023", min_value=begin_year, max_value=2023)
 
 # Afficher la courbe de consommation d'énergie désagrégée de begin_year à end_year
-courbe_desag = "../Data/ctr_regions_2022.csv"
+courbe_desag = "../Data/ctr_regions_test.csv"
 conso_reelle = "../Data/df_process_2022.csv"
 
 courbe_d = pd.read_csv(courbe_desag, sep=",")
@@ -92,7 +92,7 @@ with col23:
     test_end = st.date_input("Fin de la prévision", datetime.date(2019, 12, 31), max_value = datetime.date(2023, 12, 31))
 
 
-df = pd.read_csv("../Data/carbon_data_2022.csv", sep = ',')
+df = pd.read_csv("../Data/carbon_data_test.csv", sep = ',')
 
 # Modèle à utiliser
 modele = st.selectbox(
